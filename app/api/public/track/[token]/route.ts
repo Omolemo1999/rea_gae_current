@@ -1,0 +1,2 @@
+import {NextResponse} from "next/server";import {db} from "@/lib/db";
+export async function GET(_:Request,{params}:{params:Promise<{token:string}>}){const {token}=await params;const share=await db.trackingShare.findUnique({where:{token}});if(!share||!share.active||(share.expiresAt&&share.expiresAt<new Date()))return NextResponse.json({error:"This tracking link is no longer active."},{status:404});const location=await db.rideLocation.findFirst({where:{rideId:share.rideId},orderBy:{createdAt:"desc"}});return NextResponse.json({location})}

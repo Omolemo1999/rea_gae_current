@@ -1,0 +1,2 @@
+import {NextResponse} from 'next/server';import {db} from '@/lib/db';
+export async function GET(req:Request){const q=new URL(req.url).searchParams;const audience=q.get('audience')||'BOTH';const slot=q.get('slot');const rows=await db.experienceContent.findMany({where:{active:true,...(slot?{slot}:{}),},orderBy:[{sortOrder:'asc'},{createdAt:'desc'}]});const content=rows.filter((x:any)=>x.audience==='BOTH'||x.audience===audience);return NextResponse.json({content});}

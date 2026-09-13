@@ -1,0 +1,1 @@
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:#F4F6FF}.mascot-bounce{animation:mascotPop .55s ease}@keyframes mascotPop{0%{transform:translateY(0) rotate(0)}45%{transform:translateY(-9px) rotate(-4deg)}100%{transform:translateY(0) rotate(0)}}
