@@ -71,7 +71,10 @@ export async function POST(req: Request) {
         where: { userId: verification.userId },
         data: {
           faceVerificationStatus: "PENDING_REVIEW",
-          verificationStatus: "PENDING_REVIEW",
+          // The four-step driver flow is not submitted until Step 4. Keep the
+          // overall case in progress so the UI can advance to the final
+          // submission step instead of jumping straight to agent review.
+          verificationStatus: "IN_PROGRESS",
           faceLivenessResult: "PENDING_REVIEW",
           faceMatchResult: "PENDING_REVIEW",
         },
