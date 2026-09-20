@@ -16,7 +16,7 @@ const tables: Record<string, any> = {
   vehicle: s.vehicles, ride: s.rides, booking: s.bookings, rating: s.ratings,
   safetyReport: s.safetyReports, verificationCase: s.verificationCases,
   notification: s.notifications, driverDocument:s.driverDocuments, rideLocation:s.rideLocations, trackingShare:s.trackingShares, paymentMethod:s.paymentMethods, payment:s.payments, supportCase:s.supportCases, emailVerificationToken: s.emailVerificationTokens,
-  passwordResetToken: s.passwordResetTokens, tip: s.tips, experienceContent: s.experienceContents, phoneVerificationCode: s.phoneVerificationCodes, riderVerificationDocument:s.riderVerificationDocuments, safetyMedia:s.safetyMedia, supportRequest:s.supportRequests, supportMessage:s.supportMessages,
+  passwordResetToken: s.passwordResetTokens, tip: s.tips, experienceContent: s.experienceContents, phoneVerificationCode: s.phoneVerificationCodes, riderVerificationDocument:s.riderVerificationDocuments, riderRideVerification:s.riderRideVerifications, safetyMedia:s.safetyMedia, supportRequest:s.supportRequests, supportMessage:s.supportMessages,
   session: s.sessions,
 };
 
@@ -33,7 +33,7 @@ function condition(table: any, where: any): any {
   if (where.AND) return and(...where.AND.map((x: any) => condition(table, x)));
   const parts: any[] = [];
   for (const [key, raw] of Object.entries(where)) {
-    if (key === "ride" && raw?.driverId) continue;
+    if (key === "ride" && (raw as any)?.driverId) continue;
     const col = column(table, key);
     if (!col) continue;
     if (raw !== null && typeof raw === "object" && !Array.isArray(raw) && !(raw instanceof Date)) {
@@ -123,8 +123,8 @@ class Model {
         rows = rows.sort((a:any,b:any) => v==="desc" ? (b[k]>a[k]?1:b[k]<a[k]?-1:0) : (a[k]>b[k]?1:a[k]<b[k]?-1:0));
       }
     }
-    if (opts.where?.ride?.driverId && this.name === "booking") {
-      const allowedRides = await new Model("ride", this.executor).findMany({ where: { driverId: opts.where.ride.driverId }, select: { id: true } });
+    if ((opts.where?.ride as any)?.driverId && this.name === "booking") {
+      const allowedRides = await new Model("ride", this.executor).findMany({ where: { driverId: (opts.where.ride as any).driverId }, select: { id: true } });
       const ids = new Set(allowedRides.map((r:any) => r.id));
       rows = rows.filter((r:any) => ids.has(r.rideId));
     }
@@ -199,7 +199,7 @@ export const db = Object.assign({
   vehicle:new Model("vehicle"), ride:new Model("ride"), booking:new Model("booking"), rating:new Model("rating"),
   safetyReport:new Model("safetyReport"), verificationCase:new Model("verificationCase"), notification:new Model("notification"), driverDocument:new Model("driverDocument"), rideLocation:new Model("rideLocation"), trackingShare:new Model("trackingShare"), paymentMethod:new Model("paymentMethod"), payment:new Model("payment"), supportCase:new Model("supportCase"),
   emailVerificationToken:new Model("emailVerificationToken"), passwordResetToken:new Model("passwordResetToken"), tip:new Model("tip"), experienceContent:new Model("experienceContent"),
-  phoneVerificationCode:new Model("phoneVerificationCode"), riderVerificationDocument:new Model("riderVerificationDocument"), safetyMedia:new Model("safetyMedia"), supportRequest:new Model("supportRequest"), supportMessage:new Model("supportMessage"), session:new Model("session"),
+  phoneVerificationCode:new Model("phoneVerificationCode"), riderVerificationDocument:new Model("riderVerificationDocument"), riderRideVerification:new Model("riderRideVerification"), safetyMedia:new Model("safetyMedia"), supportRequest:new Model("supportRequest"), supportMessage:new Model("supportMessage"), session:new Model("session"),
   $queryRaw: queryRaw,
   async $transaction(arg:any):Promise<any> {
     if (typeof arg === "function") return database.transaction(async (tx:any)=>arg(Object.assign({$transaction:undefined}, {
@@ -207,7 +207,7 @@ export const db = Object.assign({
       vehicle:new Model("vehicle",tx),ride:new Model("ride",tx),booking:new Model("booking",tx),rating:new Model("rating",tx),
       safetyReport:new Model("safetyReport",tx),verificationCase:new Model("verificationCase",tx),notification:new Model("notification",tx),driverDocument:new Model("driverDocument",tx),rideLocation:new Model("rideLocation",tx),trackingShare:new Model("trackingShare",tx),paymentMethod:new Model("paymentMethod",tx),payment:new Model("payment",tx),supportCase:new Model("supportCase",tx),
       emailVerificationToken:new Model("emailVerificationToken",tx),passwordResetToken:new Model("passwordResetToken",tx),tip:new Model("tip",tx),experienceContent:new Model("experienceContent",tx),
-      phoneVerificationCode:new Model("phoneVerificationCode",tx),riderVerificationDocument:new Model("riderVerificationDocument",tx),safetyMedia:new Model("safetyMedia",tx),supportRequest:new Model("supportRequest",tx),supportMessage:new Model("supportMessage",tx),session:new Model("session",tx)
+      phoneVerificationCode:new Model("phoneVerificationCode",tx),riderVerificationDocument:new Model("riderVerificationDocument",tx),riderRideVerification:new Model("riderRideVerification",tx),safetyMedia:new Model("safetyMedia",tx),supportRequest:new Model("supportRequest",tx),supportMessage:new Model("supportMessage",tx),session:new Model("session",tx)
     })));
     return Promise.all(arg);
   }

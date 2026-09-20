@@ -175,3 +175,36 @@ Riders can add and soft-remove saved cards. Removed cards are excluded from paym
 
 ### Maps
 Driver pickup and destination use place search/current location rather than coordinate fields. The map uses OpenStreetMap/Nominatim for place discovery and OSRM for route geometry. Coordinates are stored internally only because the map/routing services require them; drivers do not enter them.
+
+
+## Identity verification update — September 2026
+
+This build integrates ReaGae with Veridexa server-side verification.
+
+### Required environment
+- `VERIDEXA_API_KEY` — create this in the Veridexa developer dashboard.
+- `VERIDEXA_BASE_URL=https://veridexa.io`
+- Keep the API key server-side only; never expose it as a `NEXT_PUBLIC_*` variable.
+
+The application uses Veridexa document verification for uploaded identity documents and Veridexa biometric face enrollment/comparison for rider identity confirmation. Veridexa's current biometric documentation states that its liveness endpoint is not enabled until a certified provider is registered, so the app does not falsely label the current Veridexa response as a completed liveness decision.
+
+### Database update
+Run:
+```bash
+npm install
+npm run db:push
+```
+or apply `drizzle/0006_identity_legal_veridexa.sql` through your normal migration process.
+
+### Rider flow
+1. Registration requires acceptance of Privacy Policy and Terms & Conditions.
+2. Email verification is completed first.
+3. Riders are sent directly to first-time identity verification.
+4. Rider uploads an ID and sees the exact uploaded filename in the UI.
+5. Rider completes the first-time face capture.
+6. Agents approve the first-time identity case.
+7. Every ride request requires a new face capture tied to that specific ride.
+8. That ride-specific check is automatically compared with the verified rider face template and recorded in the agent dashboard. It does not require agent approval.
+
+### Privacy/trust
+The registration experience links the Privacy Policy and Terms & Conditions and keeps account creation disabled until consent is given. The footer also explains safety, privacy, verification and controlled disclosure in plain language.

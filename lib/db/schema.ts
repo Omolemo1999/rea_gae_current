@@ -47,6 +47,8 @@ export const users = pgTable("User", {
   phoneVerified: boolean("phoneVerified").notNull().default(false),
   ratingAverage: real("ratingAverage").notNull().default(0),
   profilePhotoUrl: text("profilePhotoUrl"),
+  legalAcceptedAt: timestamp("legalAcceptedAt", { withTimezone: true }),
+  legalVersion: text("legalVersion"),
   ratingCount: integer("ratingCount").notNull().default(0),
 });
 
@@ -62,6 +64,7 @@ export const driverProfiles = pgTable("DriverProfile", {
   emergencyContactPhone: text("emergencyContactPhone"),
   faceLivenessResult: text("faceLivenessResult"),
   faceMatchResult: text("faceMatchResult"),
+  veridexaFaceTemplate: text("veridexaFaceTemplate"),
 });
 
 export const riderProfiles = pgTable("RiderProfile", {
@@ -268,6 +271,21 @@ export const riderVerificationDocuments = pgTable("RiderVerificationDocument", {
   reviewedBy: text("reviewedBy"),
   reviewNotes: text("reviewNotes"),
 }, (t) => [index("rider_verification_document_idx").on(t.riderId, t.type)]);
+
+export const riderRideVerifications = pgTable("RiderRideVerification", {
+  ...common,
+  riderId: text("riderId").notNull().references(() => users.id, { onDelete: "cascade" }),
+  rideId: text("rideId").notNull().references(() => rides.id, { onDelete: "cascade" }),
+  status: verificationStatusEnum("status").notNull().default("IN_PROGRESS"),
+  livenessResult: text("livenessResult"),
+  faceMatchResult: text("faceMatchResult"),
+  score: real("score"),
+  tokenHash: text("tokenHash").unique(),
+  capturedAt: timestamp("capturedAt", { withTimezone: true }),
+  metadata: text("metadata").notNull().default("{}"),
+}, (t) => [
+  index("rider_ride_verification_lookup_idx").on(t.riderId, t.rideId, t.createdAt),
+]);
 
 export const safetyMedia = pgTable("SafetyMedia", {
   ...common,

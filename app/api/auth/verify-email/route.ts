@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { hashToken } from "@/lib/security";
+import { setSession } from "@/lib/auth";
 
 export async function POST(req: Request) {
   const { token } = await req.json();
@@ -10,5 +11,7 @@ export async function POST(req: Request) {
     db.user.update({ where: { id: record.userId }, data: { emailVerified: true } }),
     db.emailVerificationToken.delete({ where: { id: record.id } }),
   ]);
-  return NextResponse.json({ message: "Email verified successfully." });
+  const user = await db.user.findUnique({ where: { id: record.userId }, select: { role: true } });
+  await setSession(record.userId);
+  return NextResponse.json({ message: "Email verified successfully.", role: user?.role });
 }

@@ -13,10 +13,14 @@ export async function POST(req: Request) {
     const phone = String(body.phone || "").trim();
     const password = String(body.password || "");
     const role = body.role;
+    const legalAccepted = body.legalAccepted === true;
+    const LEGAL_VERSION = "2026-09-20";
 
     if (!firstName || !lastName || !phone || !["RIDER", "DRIVER"].includes(role)) {
       return NextResponse.json({ error: "All required fields must be supplied." }, { status: 400 });
     }
+    if (!legalAccepted) return NextResponse.json({ error: "You must accept the Privacy Policy and Terms & Conditions to create a ReaGae account." }, { status: 400 });
+
     const emailError = validEmail(email);
     if (emailError) return NextResponse.json({ error: emailError }, { status: 400 });
     const passError = strongPassword(password);
@@ -34,6 +38,8 @@ export async function POST(req: Request) {
         phone,
         passwordHash: hashPassword(password),
         role,
+        legalAcceptedAt: new Date(),
+        legalVersion: LEGAL_VERSION,
         driverProfile: role === "DRIVER" ? { create: {} } : undefined,
         riderProfile: role === "RIDER" ? { create: {} } : undefined,
       },

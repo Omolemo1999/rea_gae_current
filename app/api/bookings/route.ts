@@ -36,6 +36,8 @@ export async function POST(req: Request) {
 
   const ride = await db.ride.findUnique({ where: { id: String(rideId) }, include: { driver: true } });
   if (!ride || ride.status === "CANCELLED" || ride.departureDate < new Date()) return NextResponse.json({ error: "Ride unavailable." }, { status: 404 });
+  const rideFaceVerification = await db.riderRideVerification.findFirst({ where: { riderId: user.id, rideId: ride.id, status: "VERIFIED" }, orderBy: { createdAt: "desc" } });
+  if (!rideFaceVerification) return NextResponse.json({ error: "Complete the live face check for this ride before requesting it." }, { status: 403, code: "RIDE_FACE_VERIFICATION_REQUIRED" });
   if (seats > ride.availableSeats) return NextResponse.json({ error: "Requested seats are not available." }, { status: 400 });
   if (bagCount > ride.luggageCapacity) return NextResponse.json({ error: "Requested luggage exceeds the ride capacity." }, { status: 400 });
 
