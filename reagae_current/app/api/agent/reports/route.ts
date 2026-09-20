@@ -1,0 +1,3 @@
+import {NextResponse} from 'next/server';import {db} from '@/lib/db';import {getCurrentUser} from '@/lib/auth';
+export async function GET(){const u=await getCurrentUser();if(!u||!['AGENT','ADMIN'].includes(u.role))return NextResponse.json({error:'Forbidden'},{status:403});const reports=await db.safetyReport.findMany({orderBy:{createdAt:'desc'},include:{ride:true,booking:true}});return NextResponse.json({reports});}
+export async function PATCH(req:Request){const u=await getCurrentUser();if(!u||!['AGENT','ADMIN'].includes(u.role))return NextResponse.json({error:'Forbidden'},{status:403});const b=await req.json();const r=await db.safetyReport.update({where:{id:String(b.id)},data:{status:b.status}});return NextResponse.json({report:r})}

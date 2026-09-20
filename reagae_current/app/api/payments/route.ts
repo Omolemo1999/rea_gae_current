@@ -1,0 +1,2 @@
+import {NextResponse} from "next/server";import {db} from "@/lib/db";import {getCurrentUser} from "@/lib/auth";
+export async function GET(){const u=await getCurrentUser();if(!u)return NextResponse.json({error:"Unauthorized"},{status:401});const methods=await db.paymentMethod.findMany({where:{userId:u.id,active:true},orderBy:{createdAt:"desc"}});const payments=await db.payment.findMany({where:{payerId:u.id},orderBy:{createdAt:"desc"},take:30});return NextResponse.json({methods,payments})}

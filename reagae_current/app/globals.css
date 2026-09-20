@@ -1,0 +1,26 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap');
+
+:root { color-scheme: light; }
+html, body { max-width: 100%; min-height: 100%; }
+body { font-family: "Plus Jakarta Sans", Manrope, "Segoe UI", Arial, sans-serif; background: #F5F6F8; color: #111318; }
+a { color: inherit; }
+::selection { background: rgba(49,92,214,.18); }
+* { scrollbar-width: thin; scrollbar-color: #C8CDD6 transparent; }
+*::-webkit-scrollbar { width: 8px; height: 8px; }
+*::-webkit-scrollbar-thumb { background: #C8CDD6; border-radius: 8px; }
+*::-webkit-scrollbar-track { background: transparent; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .01ms !important; } }
+
+
+/* ReaGae enterprise visual language: structured surfaces, not rounded-card UI. */
+:root { --rg-indigo: #514ED0; --rg-purple: #6D6AF7; --rg-ink: #111318; --rg-muted: #626B78; --rg-line: #E3E6EB; --rg-surface: #FFFFFF; }
+.MuiPaper-root, .MuiCard-root { border-radius: 0 !important; }
+.MuiDialog-paper { border-radius: 0 !important; }
+.MuiAlert-root { border-radius: 0 !important; }
+.MuiOutlinedInput-root { border-radius: 0 !important; }
+.MuiChip-root { border-radius: 4px !important; }
+.MuiButton-root { border-radius: 6px !important; }
+.MuiListItemButton-root { border-radius: 0 !important; }
+.MuiTooltip-tooltip { border-radius: 0 !important; }
+.reagae-surface { background: var(--rg-surface); border: 1px solid var(--rg-line); }
+.reagae-section-line { border-top: 1px solid var(--rg-line); }

@@ -1,0 +1,23 @@
+-- ReaGae enterprise operations / safety / payments / tracking migration
+DO $$ BEGIN CREATE TYPE "PickupType" AS ENUM ('MALL','SHOPPING_CENTER','TRANSIT_HUB','PUBLIC_VENUE'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN CREATE TYPE "DriverDocumentStatus" AS ENUM ('PENDING','APPROVED','REJECTED'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN CREATE TYPE "PaymentMethodType" AS ENUM ('CARD'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN CREATE TYPE "PaymentStatus" AS ENUM ('PENDING','PAID','FAILED','REFUNDED'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+ALTER TYPE "UserRole" ADD VALUE IF NOT EXISTS 'AGENT';
+ALTER TYPE "UserRole" ADD VALUE IF NOT EXISTS 'ADMIN';
+ALTER TYPE "DocumentType" ADD VALUE IF NOT EXISTS 'VEHICLE_COMPLIANCE';
+ALTER TYPE "DocumentType" ADD VALUE IF NOT EXISTS 'POLICE_CLEARANCE';
+ALTER TABLE "SafetyReport" ALTER COLUMN "reporterId" DROP NOT NULL;
+ALTER TABLE "Booking" ADD COLUMN IF NOT EXISTS "collectionSpotName" text NOT NULL DEFAULT '';
+ALTER TABLE "Booking" ADD COLUMN IF NOT EXISTS "collectionSpotType" "PickupType" NOT NULL DEFAULT 'MALL';
+ALTER TABLE "Booking" ADD COLUMN IF NOT EXISTS "collectionLatitude" real;
+ALTER TABLE "Booking" ADD COLUMN IF NOT EXISTS "collectionLongitude" real;
+CREATE TABLE IF NOT EXISTS "DriverDocument" ("id" text PRIMARY KEY,"createdAt" timestamptz NOT NULL,"updatedAt" timestamptz NOT NULL,"driverId" text NOT NULL REFERENCES "User"("id") ON DELETE CASCADE,"type" "DocumentType" NOT NULL,"fileName" text NOT NULL,"mimeType" text NOT NULL,"data" text NOT NULL,"status" "DriverDocumentStatus" NOT NULL DEFAULT 'PENDING',"reviewedBy" text,"reviewNotes" text);
+CREATE INDEX IF NOT EXISTS "driver_document_driver_type_idx" ON "DriverDocument"("driverId","type");
+CREATE TABLE IF NOT EXISTS "RideLocation" ("id" text PRIMARY KEY,"createdAt" timestamptz NOT NULL,"updatedAt" timestamptz NOT NULL,"rideId" text NOT NULL REFERENCES "Ride"("id") ON DELETE CASCADE,"latitude" real NOT NULL,"longitude" real NOT NULL,"accuracy" real,"heading" real,"speed" real);
+CREATE INDEX IF NOT EXISTS "ride_location_latest_idx" ON "RideLocation"("rideId","createdAt");
+CREATE TABLE IF NOT EXISTS "TrackingShare" ("id" text PRIMARY KEY,"createdAt" timestamptz NOT NULL,"updatedAt" timestamptz NOT NULL,"rideId" text NOT NULL REFERENCES "Ride"("id") ON DELETE CASCADE,"token" text NOT NULL UNIQUE,"label" text NOT NULL DEFAULT 'Safety contact',"active" boolean NOT NULL DEFAULT true,"expiresAt" timestamptz);
+CREATE TABLE IF NOT EXISTS "PaymentMethod" ("id" text PRIMARY KEY,"createdAt" timestamptz NOT NULL,"updatedAt" timestamptz NOT NULL,"userId" text NOT NULL REFERENCES "User"("id") ON DELETE CASCADE,"provider" text NOT NULL DEFAULT 'PAYSTACK',"type" "PaymentMethodType" NOT NULL DEFAULT 'CARD',"authorizationCode" text,"brand" text NOT NULL DEFAULT 'Card',"last4" text NOT NULL,"expMonth" integer,"expYear" integer,"active" boolean NOT NULL DEFAULT true);
+CREATE INDEX IF NOT EXISTS "payment_method_user_idx" ON "PaymentMethod"("userId","active");
+CREATE TABLE IF NOT EXISTS "Payment" ("id" text PRIMARY KEY,"createdAt" timestamptz NOT NULL,"updatedAt" timestamptz NOT NULL,"bookingId" text REFERENCES "Booking"("id") ON DELETE SET NULL,"payerId" text NOT NULL REFERENCES "User"("id") ON DELETE RESTRICT,"provider" text NOT NULL DEFAULT 'PAYSTACK',"reference" text NOT NULL UNIQUE,"amount" real NOT NULL,"driverFee" real NOT NULL DEFAULT 0,"customerFee" real NOT NULL DEFAULT 0,"status" "PaymentStatus" NOT NULL DEFAULT 'PENDING',"metadata" text NOT NULL DEFAULT '{}');
+CREATE TABLE IF NOT EXISTS "SupportCase" ("id" text PRIMARY KEY,"createdAt" timestamptz NOT NULL,"updatedAt" timestamptz NOT NULL,"userId" text NOT NULL REFERENCES "User"("id") ON DELETE CASCADE,"assignedAgentId" text,"category" text NOT NULL,"subject" text NOT NULL,"description" text NOT NULL,"status" text NOT NULL DEFAULT 'OPEN');
