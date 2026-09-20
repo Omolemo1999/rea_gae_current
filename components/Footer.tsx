@@ -45,7 +45,7 @@ export default function Footer() {
 
 function Trust({ icon, title, text }: { icon: React.ReactNode; title: string; text: string }) {
   return <Stack direction="row" gap={1.5} sx={{ minWidth: 0, flex: 1 }}>
-    <Box sx={{ width: 40, height: 40, flex: "0 0 auto", borderRadius: 2.5, display: "grid", placeItems: "center", bgcolor: "rgba(108,139,238,.12)", color: "#9EB2FF" }}>{icon}</Box>
+    <Box sx={{ width: 40, height: 40, flex: "0 0 auto", borderRadius: 0, display: "grid", placeItems: "center", bgcolor: "rgba(108,139,238,.12)", color: "#9EB2FF" }}>{icon}</Box>
     <Box sx={{ minWidth: 0 }}><Typography fontWeight={850}>{title}</Typography><Typography variant="caption" sx={{ color: "rgba(255,255,255,.58)", lineHeight: 1.6 }}>{text}</Typography></Box>
   </Stack>;
 }

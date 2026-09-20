@@ -349,7 +349,7 @@ const Page = () => {
             position: "absolute",
             width: 420,
             height: 420,
-            borderRadius: "50%",
+            borderRadius: 0,
             left: "10%",
             top: "10%",
             background:
@@ -367,7 +367,7 @@ const Page = () => {
             position: "absolute",
             width: 350,
             height: 350,
-            borderRadius: "50%",
+            borderRadius: 0,
             right: "8%",
             bottom: "8%",
             background:
@@ -445,7 +445,7 @@ const Page = () => {
                   gap: 1.1,
                   px: 1.8,
                   py: 0.9,
-                  borderRadius: "100px",
+                  borderRadius: 0,
 
                   background: "rgba(255,255,255,0.65)",
 
@@ -461,7 +461,7 @@ const Page = () => {
                   sx={{
                     width: 8,
                     height: 8,
-                    borderRadius: "50%",
+                    borderRadius: 0,
                     background: "#E32636",
                     boxShadow:
                       "0 0 15px rgba(227,38,54,0.65)",
@@ -579,7 +579,7 @@ const Page = () => {
                       sm: 205,
                     },
                     py: 1.55,
-                    borderRadius: "15px",
+                    borderRadius: 0,
                     color: "#fff",
                     textTransform: "none",
                     fontWeight: 800,
@@ -614,7 +614,7 @@ const Page = () => {
                       sm: 205,
                     },
                     py: 1.55,
-                    borderRadius: "15px",
+                    borderRadius: 0,
                     color: "#19347F",
                     textTransform: "none",
                     fontWeight: 800,
@@ -676,7 +676,7 @@ const Page = () => {
                       gap: 0.8,
                       px: 1.4,
                       py: 0.9,
-                      borderRadius: "12px",
+                      borderRadius: 0,
                       background:
                         "rgba(255,255,255,.52)",
                       border:
@@ -735,7 +735,7 @@ const Page = () => {
                   },
                   minHeight: 420,
                   p: 3,
-                  borderRadius: "32px",
+                  borderRadius: 0,
 
                   background:
                     "rgba(255,255,255,.58)",
@@ -782,7 +782,7 @@ const Page = () => {
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        borderRadius: "12px",
+                        borderRadius: 0,
                         background:
                           "rgba(41,82,204,.1)",
                         color: "#2952CC",
@@ -845,7 +845,7 @@ const Page = () => {
                               alignItems: "center",
                               justifyContent: "center",
 
-                              borderRadius: "50%",
+                              borderRadius: 0,
 
                               background:
                                 stop.color,
@@ -858,7 +858,7 @@ const Page = () => {
                               sx={{
                                 width: 10,
                                 height: 10,
-                                borderRadius: "50%",
+                                borderRadius: 0,
                                 background: "#fff",
                               }}
                             />
@@ -898,7 +898,7 @@ const Page = () => {
                   <Box
                     sx={{
                       p: 2,
-                      borderRadius: "18px",
+                      borderRadius: 0,
                       background:
                         "rgba(255,255,255,.62)",
                     }}
@@ -938,7 +938,7 @@ const Page = () => {
                         sx={{
                           px: 1.5,
                           py: 0.7,
-                          borderRadius: "100px",
+                          borderRadius: 0,
                           background:
                             "rgba(41,82,204,.1)",
                           color: "#2952CC",
@@ -1065,7 +1065,7 @@ const Page = () => {
                   position: "relative",
                   p: 3.5,
                   minHeight: 260,
-                  borderRadius: "24px",
+                  borderRadius: 0,
                   background: "#F7F9FC",
                   border: "1px solid #E8EDF5",
                   transition: "all .3s ease",
@@ -1099,7 +1099,7 @@ const Page = () => {
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    borderRadius: "15px",
+                    borderRadius: 0,
                     color: "#2952CC",
                     background:
                       "rgba(41,82,204,.09)",
@@ -1226,7 +1226,7 @@ const Page = () => {
                   },
                   px: 3,
                   py: 1.5,
-                  borderRadius: "14px",
+                  borderRadius: 0,
                   background: "#19347F",
                   color: "#fff",
                   textTransform: "none",
@@ -1253,7 +1253,7 @@ const Page = () => {
                   xs: 2,
                   md: 3,
                 },
-                borderRadius: "28px",
+                borderRadius: 0,
                 background:
                   "rgba(255,255,255,.75)",
                 border:
@@ -1284,7 +1284,7 @@ const Page = () => {
                     key={`${ride.from}-${ride.to}`}
                     sx={{
                       p: 2,
-                      borderRadius: "17px",
+                      borderRadius: 0,
                       background: "#F8FAFD",
                       border:
                         "1px solid #EDF0F5",
@@ -1327,8 +1327,7 @@ const Page = () => {
                               "center",
                             justifyContent:
                               "center",
-                            borderRadius:
-                              "12px",
+                            borderRadius: 0,
                             background:
                               "rgba(41,82,204,.1)",
                             color:
@@ -1406,7 +1405,7 @@ const Page = () => {
                 xs: 4,
                 md: 7,
               },
-              borderRadius: "32px",
+              borderRadius: 0,
               background:
                 "linear-gradient(135deg,#101D38,#172E63)",
               color: "#fff",
@@ -1421,7 +1420,7 @@ const Page = () => {
                 height: 350,
                 right: -100,
                 top: -130,
-                borderRadius: "50%",
+                borderRadius: 0,
                 background:
                   "radial-gradient(circle,rgba(227,38,54,.25),transparent 70%)",
               }}
@@ -1492,7 +1491,7 @@ const Page = () => {
                 sx={{
                   px: 3,
                   py: 1.5,
-                  borderRadius: "14px",
+                  borderRadius: 0,
                   color: "#101D38",
                   background: "#fff",
                   textTransform: "none",
@@ -1625,7 +1624,7 @@ const Page = () => {
                   sx={{
                     p: 2.5,
                     minHeight: 160,
-                    borderRadius: "20px",
+                    borderRadius: 0,
                     background: "#fff",
                     border:
                       "1px solid #E7ECF4",

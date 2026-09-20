@@ -15,5 +15,5 @@ export default function LiveMap({point,pickup,destination,height=420}:{point?:Po
    if(pickup&&!mapRef.current.__pickup){L.circleMarker([pickup.latitude,pickup.longitude],{radius:7}).addTo(mapRef.current).bindPopup("Pickup");mapRef.current.__pickup=true}
    if(destination&&!mapRef.current.__destination){L.circleMarker([destination.latitude,destination.longitude],{radius:7}).addTo(mapRef.current).bindPopup("Destination");mapRef.current.__destination=true}
  };load();return()=>{disposed=true}},[point?.latitude,point?.longitude,pickup?.latitude,pickup?.longitude,destination?.latitude,destination?.longitude]);
- return <Box ref={ref} sx={{height,borderRadius:4,overflow:"hidden",border:"1px solid",borderColor:"divider",background:"#e8edf4"}}/>;
+ return <Box ref={ref} sx={{height,borderRadius: 0,overflow:"hidden",border:"1px solid",borderColor:"divider",background:"#e8edf4"}}/>;
 }

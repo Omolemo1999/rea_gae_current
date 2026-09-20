@@ -14,9 +14,9 @@ export default function CarLoader({ label = "Loading your journey…", fullScree
         <Box sx={{ position: "relative", height: 54, mb: 1.5 }}>
           <Box sx={{ position: "absolute", left: 10, right: 10, bottom: 9, height: 2, bgcolor: "#D8DDE5" }} />
           <Box sx={{ position: "absolute", left: 10, right: 10, bottom: 4, display: "flex", justifyContent: "space-between", color: "#A9B0BB" }}>
-            <Box sx={{ width: 5, height: 5, bgcolor: "currentColor", borderRadius: "50%" }} />
-            <Box sx={{ width: 5, height: 5, bgcolor: "currentColor", borderRadius: "50%" }} />
-            <Box sx={{ width: 5, height: 5, bgcolor: "currentColor", borderRadius: "50%" }} />
+            <Box sx={{ width: 5, height: 5, bgcolor: "currentColor", borderRadius: 0 }} />
+            <Box sx={{ width: 5, height: 5, bgcolor: "currentColor", borderRadius: 0 }} />
+            <Box sx={{ width: 5, height: 5, bgcolor: "currentColor", borderRadius: 0 }} />
           </Box>
           <Box className="reagae-car-loader" sx={{ position: "absolute", left: 0, bottom: 5, color: "#315CD6", display: "flex", alignItems: "center" }}>
             <DirectionsCarFilledRoundedIcon sx={{ fontSize: 34 }} />

@@ -1,12 +1,85 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap');
 
-:root { color-scheme: light; }
+:root {
+  color-scheme: light;
+  --rg-indigo: #514ED0;
+  --rg-purple: #6D6AF7;
+  --rg-ink: #111318;
+  --rg-muted: #626B78;
+  --rg-line: #E3E6EB;
+  --rg-surface: #FFFFFF;
+  --rg-bg: #F5F6F8;
+}
+
 html, body { max-width: 100%; min-height: 100%; }
-body { font-family: Inter, "Segoe UI", Arial, sans-serif; }
+html { background: var(--rg-bg); }
+body {
+  margin: 0;
+  font-family: "Plus Jakarta Sans", Manrope, "Segoe UI", Arial, sans-serif;
+  background: var(--rg-bg);
+  color: var(--rg-ink);
+}
 a { color: inherit; }
-::selection { background: rgba(49,92,214,.18); }
-* { scrollbar-width: thin; scrollbar-color: #C8CDD6 transparent; }
+::selection { background: rgba(81,78,208,.16); }
+* { box-sizing: border-box; scrollbar-width: thin; scrollbar-color: #C8CDD6 transparent; }
 *::-webkit-scrollbar { width: 8px; height: 8px; }
-*::-webkit-scrollbar-thumb { background: #C8CDD6; border-radius: 8px; }
+*::-webkit-scrollbar-thumb { background: #C8CDD6; }
 *::-webkit-scrollbar-track { background: transparent; }
-@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .01ms !important; } }
+
+/* ReaGae verification-page visual language: crisp, editorial, structured surfaces. */
+.MuiPaper-root,
+.MuiCard-root,
+.MuiDialog-paper,
+.MuiAlert-root,
+.MuiOutlinedInput-root,
+.MuiChip-root,
+.MuiButton-root,
+.MuiListItemButton-root,
+.MuiTooltip-tooltip,
+.MuiAvatar-root,
+.MuiBadge-root,
+.MuiToggleButton-root,
+.MuiSelect-select,
+.MuiAutocomplete-root,
+.MuiLinearProgress-root,
+.MuiCircularProgress-root { border-radius: 0 !important; }
+
+/* Flatten legacy page-specific rounded styles without requiring every page to be rewritten. */
+.MuiPaper-root, .MuiCard-root { box-shadow: none !important; }
+.reagae-surface { background: var(--rg-surface); border: 1px solid var(--rg-line); }
+.reagae-section-line { border-top: 1px solid var(--rg-line); }
+
+.reagae-route-loader,
+.reagae-global-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 2500;
+  display: grid;
+  place-items: center;
+  background: rgba(245,246,248,.76);
+  backdrop-filter: blur(5px);
+}
+.reagae-global-loader__inner {
+  width: min(420px, calc(100vw - 32px));
+  background: #fff;
+  border: 1px solid var(--rg-line);
+  box-shadow: 0 18px 55px rgba(17,19,24,.12);
+}
+.reagae-global-loader .reagae-car-loader { animation-duration: 1.5s; }
+
+@media (max-width: 600px) {
+  body { font-size: 15px; }
+  .MuiContainer-root { padding-left: 16px !important; padding-right: 16px !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+  }
+}
+
+.reagae-route-loader { position: fixed; inset: 0; z-index: 2400; pointer-events: none; }
+.reagae-route-loader .reagae-car-loader { background: rgba(245,246,248,.92); }

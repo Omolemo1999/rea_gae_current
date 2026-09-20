@@ -208,3 +208,11 @@ or apply `drizzle/0006_identity_legal_veridexa.sql` through your normal migratio
 
 ### Privacy/trust
 The registration experience links the Privacy Policy and Terms & Conditions and keeps account creation disabled until consent is given. The footer also explains safety, privacy, verification and controlled disclosure in plain language.
+
+## Camera permissions and mobile testing
+
+Face verification uses the browser MediaDevices API. The app sends a `Permissions-Policy` header that explicitly allows camera access for the ReaGae origin. The face-verification screen requests `navigator.mediaDevices.getUserMedia()` only when the rider selects **Allow camera & continue**, so the browser's native permission prompt can appear.
+
+For desktop and mobile production deployments, serve ReaGae over **HTTPS**. `http://localhost` is treated as a secure context by modern browsers for local development, but an ordinary `http://192.168.x.x:3000` address on a phone is not. If a user has previously blocked camera access, the browser will not allow JavaScript to override that decision; the verification screen therefore provides browser/device-specific steps and a retry action.
+
+The server security header is intentionally configured as `camera=(self), microphone=(self), geolocation=(self)` rather than `camera=()`, which would block `getUserMedia()` before the browser could request permission.

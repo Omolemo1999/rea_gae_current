@@ -77,7 +77,7 @@ export default function RiderRideDetails() {
       <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "minmax(0,1.35fr) minmax(300px,.8fr)" }, gap: 3, mt: 3 }}>
         <Paper sx={{ p: { xs: 2, md: 3 }, border: "1px solid", borderColor: "divider", minWidth: 0 }} elevation={0}>
           <Typography variant="h6">Your journey</Typography>
-          <Box sx={{ mt: 3, p: 2, borderRadius: 3, bgcolor: "rgba(49,92,214,.07)", overflow: "hidden" }}>
+          <Box sx={{ mt: 3, p: 2, borderRadius: 0, bgcolor: "rgba(49,92,214,.07)", overflow: "hidden" }}>
             <Typography fontWeight={800}>Pickup</Typography><Typography color="text.secondary" sx={{ overflowWrap: "anywhere" }}>{ride.pickupName}</Typography>
             <Typography sx={{ my: 2, color: "primary.main", fontWeight: 900 }}>↓</Typography>
             <Typography fontWeight={800}>Destination</Typography><Typography color="text.secondary" sx={{ overflowWrap: "anywhere" }}>{ride.destinationName}</Typography>
@@ -89,7 +89,7 @@ export default function RiderRideDetails() {
         <Paper sx={{ p: { xs: 2, md: 3 }, border: "1px solid", borderColor: "divider", minWidth: 0 }} elevation={0}>
           <Typography variant="h6">Request seats & collection</Typography>
           <Stack gap={2} sx={{ mt: 2 }}>
-            <Paper elevation={0} sx={{ p: 2, borderRadius: 3, bgcolor: faceVerified ? "rgba(21,154,112,.06)" : "rgba(49,92,214,.055)", border: "1px solid", borderColor: faceVerified ? "success.main" : "rgba(49,92,214,.15)" }}>
+            <Paper elevation={0} sx={{ p: 2, borderRadius: 0, bgcolor: faceVerified ? "rgba(21,154,112,.06)" : "rgba(49,92,214,.055)", border: "1px solid", borderColor: faceVerified ? "success.main" : "rgba(49,92,214,.15)" }}>
               <Stack direction="row" gap={1.5} alignItems="center">
                 <FaceRetouchingNaturalRoundedIcon color={faceVerified ? "success" : "primary"} />
                 <Box sx={{ flex: 1, minWidth: 0 }}><Typography fontWeight={850}>Identity check for this request</Typography><Typography variant="caption" color="text.secondary">{faceVerified ? "Confirmed for this ride. No agent approval is required." : "A fresh face check is required every time you request a ride."}</Typography></Box>

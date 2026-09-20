@@ -65,12 +65,12 @@ export default function NavBar() {
             }}>
               {navItems.map(item => (
                 <Button key={item.id} onClick={() => scrollToSection(item.id)} sx={{
-                  position: "relative", px: { md: 1.25, lg: 1.5 }, py: 1, minWidth: "auto", borderRadius: "10px",
+                  position: "relative", px: { md: 1.25, lg: 1.5 }, py: 1, minWidth: "auto", borderRadius: 0,
                   color: scrolled ? "rgba(255,255,255,.88)" : "#12213B",
                   fontSize: { md: ".78rem", lg: ".84rem" }, fontWeight: 750, textTransform: "none",
                   whiteSpace: "nowrap", transition: "color .2s ease,background-color .2s ease",
                   "&::after": { content: '""', position: "absolute", left: "50%", bottom: 5, width: 0, height: 2,
-                    borderRadius: 10, backgroundColor: scrolled ? "#fff" : "#12213B",
+                    borderRadius: 0, backgroundColor: scrolled ? "#fff" : "#12213B",
                     transform: "translateX(-50%)", transition: "width .25s ease" },
                   "&:hover": { color: scrolled ? "#fff" : "#091426", backgroundColor: scrolled ? "rgba(255,255,255,.07)" : "rgba(18,33,59,.06)" },
                   "&:hover::after": { width: "18px" }
@@ -80,7 +80,7 @@ export default function NavBar() {
 
             <Button onClick={() => router.push("/rider/rides")} endIcon={<ArrowForwardRoundedIcon sx={{ fontSize: 17 }} />}
               sx={{ display: { xs: "none", md: "inline-flex" }, flexShrink: 0, px: { md: 1.8, lg: 2.2 }, py: 1.1,
-                borderRadius: "12px", color: "#fff", background: "linear-gradient(135deg,#315CD6,#19347F)",
+                borderRadius: 0, color: "#fff", background: "linear-gradient(135deg,#315CD6,#19347F)",
                 fontSize: { md: ".76rem", lg: ".82rem" }, fontWeight: 850, textTransform: "none",
                 boxShadow: "0 8px 24px rgba(41,82,204,.25)", "&:hover": { background: "linear-gradient(135deg,#3D6BE8,#19347F)", transform: "translateY(-2px)" }
               }}>Get Started</Button>
@@ -117,7 +117,7 @@ export default function NavBar() {
             {navItems.map(item => (
               <Button key={item.id} fullWidth onClick={() => scrollToSection(item.id)} sx={{
                 justifyContent: "flex-start", textAlign: "left", py: 1.7, px: 1.5, minHeight: 54,
-                borderRadius: "12px", color: "rgba(18,33,59,.78)", fontWeight: 700, fontSize: ".98rem",
+                borderRadius: 0, color: "rgba(18,33,59,.78)", fontWeight: 700, fontSize: ".98rem",
                 textTransform: "none", "&:hover": { color: "#12213B", background: "rgba(18,33,59,.055)", transform: "translateX(4px)" }
               }}>{item.label}</Button>
             ))}
@@ -127,13 +127,13 @@ export default function NavBar() {
 
           <Box sx={{ flex: 1 }} />
 
-          <Box sx={{ p: 2.2, mb: 2, borderRadius: "18px", background: "rgba(18,33,59,.045)", border: "1px solid rgba(18,33,59,.08)" }}>
+          <Box sx={{ p: 2.2, mb: 2, borderRadius: 0, background: "rgba(18,33,59,.045)", border: "1px solid rgba(18,33,59,.08)" }}>
             <Typography sx={{ color: "#12213B", fontWeight: 850, fontSize: ".95rem", mb: .6 }}>Ready to travel?</Typography>
             <Typography sx={{ color: "rgba(18,33,59,.5)", fontSize: ".72rem", lineHeight: 1.6 }}>Find someone heading your way.</Typography>
           </Box>
 
           <Button onClick={() => { setMobileOpen(false); router.push("/rider/rides"); }} endIcon={<ArrowForwardRoundedIcon />}
-            sx={{ py: 1.6, borderRadius: "14px", color: "#fff", background: "linear-gradient(135deg,#315CD6,#19347F)", fontWeight: 850, textTransform: "none" }}>
+            sx={{ py: 1.6, borderRadius: 0, color: "#fff", background: "linear-gradient(135deg,#315CD6,#19347F)", fontWeight: 850, textTransform: "none" }}>
             Find a Ride
           </Button>
 
