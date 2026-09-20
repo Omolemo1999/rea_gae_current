@@ -4,6 +4,7 @@ import { Alert, Box, Button, Chip, Divider, Fade, Paper, Skeleton, Stack, Typogr
 import VerifiedUserRoundedIcon from "@mui/icons-material/VerifiedUserRounded";
 import AuthGuard from "@/components/AuthGuard";
 import DashboardShell from "@/components/dashboard/DashboardShell";
+import LoadingButton from "@/components/loading/LoadingButton";
 import { useEffect, useState } from "react";
 
 const pretty = (value?: string) => value ? value.replaceAll("_", " ").replace(/\b\w/g, (x) => x.toUpperCase()) : "Not Started";
@@ -12,14 +13,17 @@ export default function RiderReview() {
   const [items, setItems] = useState<any[]>([]);
   const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(true);
+  const [busyId, setBusyId] = useState("");
   const load = () => fetch("/api/agent/riders", { cache: "no-store" }).then(r => r.json()).then(d => setItems(d.riders || [])).finally(() => setLoading(false));
   useEffect(() => { load(); }, []);
 
   const act = async (id: string, action: string, status: string, docId?: string) => {
     setMsg("");
+    setBusyId(id);
     const r = await fetch(`/api/agent/riders/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action, status, documentId: docId }) });
     const d = await r.json();
-    if (!r.ok) { setMsg(d.error || "Review action failed."); return; }
+    if (!r.ok) { setMsg(d.error || "Review action failed."); setBusyId(""); return; }
+    setBusyId("");
     load();
   };
 
@@ -41,7 +45,7 @@ export default function RiderReview() {
         <Stack direction={{ xs: "column", sm: "row" }} gap={1.2} sx={{ mt: 1.2 }} alignItems={{ sm: "center" }}>
           <Box sx={{ flex: 1, minWidth: 0 }}><Typography variant="body2" fontWeight={750}>{r.document?.fileName || "No ID uploaded"}</Typography><Typography variant="caption" color="text.secondary">Document status: {pretty(r.document?.status)}</Typography></Box>
           {r.document && <Button component="a" href={r.document.data} target="_blank" variant="outlined">View ID</Button>}
-          {r.document?.status !== "APPROVED" && r.document && <Button variant="contained" onClick={() => act(r.id, "DOCUMENT", "APPROVED", r.document.id)}>Approve ID</Button>}
+          {r.document?.status !== "APPROVED" && r.document && <LoadingButton variant="contained" loading={busyId===r.id} onClick={() => act(r.id, "DOCUMENT", "APPROVED", r.document.id)}>Approve ID</LoadingButton>}
         </Stack>
 
         <Paper elevation={0} sx={{ mt: 2, p: 2, borderRadius: 4, bgcolor: "rgba(49,92,214,.045)", border: "1px solid rgba(49,92,214,.1)" }}>
@@ -56,9 +60,9 @@ export default function RiderReview() {
         </Paper>
 
         <Stack direction="row" gap={1} flexWrap="wrap" sx={{ mt: 2 }}>
-          {r.riderProfile?.faceVerificationStatus === "PENDING_REVIEW" && <Button variant="outlined" onClick={() => act(r.id, "FACE", "VERIFIED")}>Approve first-time face</Button>}
-          {r.riderProfile?.faceVerificationStatus !== "REJECTED" && r.riderProfile?.verificationStatus !== "VERIFIED" && <Button color="error" variant="outlined" onClick={() => act(r.id, "FACE", "REJECTED")}>Reject face</Button>}
-          {r.riderProfile?.faceVerificationStatus === "VERIFIED" && <Button variant="contained" color="success" onClick={() => act(r.id, "FINAL", "VERIFIED")}>Complete rider verification</Button>}
+          {r.riderProfile?.faceVerificationStatus === "PENDING_REVIEW" && <LoadingButton variant="outlined" loading={busyId===r.id} onClick={() => act(r.id, "FACE", "VERIFIED")}>Approve first-time face</LoadingButton>}
+          {r.riderProfile?.faceVerificationStatus !== "REJECTED" && r.riderProfile?.verificationStatus !== "VERIFIED" && <LoadingButton color="error" variant="outlined" loading={busyId===r.id} onClick={() => act(r.id, "FACE", "REJECTED")}>Reject face</LoadingButton>}
+          {r.riderProfile?.faceVerificationStatus === "VERIFIED" && <LoadingButton variant="contained" color="success" loading={busyId===r.id} onClick={() => act(r.id, "FINAL", "VERIFIED")}>Complete rider verification</LoadingButton>}
         </Stack>
       </Paper>)}
       {!loading && !items.length && <Paper elevation={0} sx={{ p: 5, textAlign: "center", borderRadius: 4 }}><Typography>No rider verification cases waiting.</Typography></Paper>}

@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import AuthGuard from "@/components/AuthGuard";
 import DashboardShell from "@/components/dashboard/DashboardShell";
 import Mascot from "@/components/common/Mascot";
+import FaceCaptureDialog from "@/components/verification/FaceCaptureDialog";
 import LiveMap from "@/components/maps/LiveMap";
 import { calculateFees } from "@/lib/pricing";
 
@@ -23,6 +24,7 @@ export default function RiderRideDetails() {
   const [busy, setBusy] = useState(false);
   const [faceBusy, setFaceBusy] = useState(false);
   const [faceUrl, setFaceUrl] = useState("");
+  const [faceOpen, setFaceOpen] = useState(false);
   const [faceVerified, setFaceVerified] = useState(false);
   const [collection, setCollection] = useState({ name: "", type: "MALL", latitude: "", longitude: "" });
   const [verification, setVerification] = useState<any>(null);
@@ -45,15 +47,9 @@ export default function RiderRideDetails() {
     poll(); const timer = window.setInterval(poll, 5000); return () => window.clearInterval(timer);
   }, [id, ride?.id]);
 
-  const startRideFace = async () => {
-    setFaceBusy(true); setError(""); setFaceUrl("");
-    try {
-      const r = await fetch("/api/verification/face", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ mode: "RIDE", rideId: id }) });
-      const d = await r.json();
-      if (!r.ok) throw new Error(d.error || "Could not start the face check.");
-      setFaceUrl(d.url);
-    } catch (e) { setError(e instanceof Error ? e.message : "Could not start face verification."); }
-    finally { setFaceBusy(false); }
+  const startRideFace = () => {
+    setError("");
+    setFaceOpen(true);
   };
 
   const book = async () => {
@@ -99,7 +95,7 @@ export default function RiderRideDetails() {
                 <Box sx={{ flex: 1, minWidth: 0 }}><Typography fontWeight={850}>Identity check for this request</Typography><Typography variant="caption" color="text.secondary">{faceVerified ? "Confirmed for this ride. No agent approval is required." : "A fresh face check is required every time you request a ride."}</Typography></Box>
                 {faceVerified ? <VerifiedUserRoundedIcon color="success" /> : <Button size="small" variant="contained" disabled={faceBusy || verification?.verificationStatus !== "VERIFIED"} onClick={startRideFace}>{faceBusy ? <CircularProgress size={18} color="inherit" /> : "Verify me"}</Button>}
               </Stack>
-              {faceUrl && !faceVerified && <Button fullWidth variant="outlined" href={faceUrl} target="_blank" sx={{ mt: 1.5 }}>Open secure camera check</Button>}
+
             </Paper>
 
             <TextField select label="Collection point type" value={collection.type} onChange={e => setCollection({ ...collection, type: e.target.value })}>{[["MALL", "Mall"], ["SHOPPING_CENTER", "Shopping centre"], ["TRANSIT_HUB", "Transit hub"], ["PUBLIC_VENUE", "Public venue"]].map(x => <MenuItem key={x[0]} value={x[0]}>{x[1]}</MenuItem>)}</TextField>
@@ -114,5 +110,5 @@ export default function RiderRideDetails() {
         </Paper>
       </Box>
     </> : <Typography sx={{ py: 8, textAlign: "center" }}>Ride not found.</Typography>}
-  </Box></Fade></DashboardShell></AuthGuard>;
+  </Box></Fade><FaceCaptureDialog open={faceOpen} mode="RIDE" rideId={id} onClose={()=>setFaceOpen(false)} onComplete={(d)=>{setFaceOpen(false);setFaceVerified(d?.rideVerification?.status === "VERIFIED");setError(d?.message || "Face verification completed.")}}/></DashboardShell></AuthGuard>;
 }

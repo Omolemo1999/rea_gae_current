@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Box, CircularProgress } from "@mui/material";
+import CarLoader from "@/components/loading/CarLoader";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setUser } from "@/store/slices/authSlice";
 
@@ -32,7 +32,7 @@ export default function AuthGuard({
   }, [dispatch, router, role]);
 
   if (loading || !user || (role && (Array.isArray(role) ? !role.includes(user.role) : user.role !== role))) {
-    return <Box sx={{ minHeight: "100vh", display: "grid", placeItems: "center" }}><CircularProgress /></Box>;
+    return <CarLoader fullScreen label="Loading your secure workspace…" />;
   }
   return <>{children}</>;
 }
