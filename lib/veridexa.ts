@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 
-const BASE = process.env.VERIDEXA_BASE_URL || "https://veridexa.io";
+const BASE = (process.env.VERIDEXA_BASE_URL || "https://veridexa.io").replace(/\/$/, "");
 
 function key() {
   return process.env.VERIDEXA_API_KEY || "";
@@ -56,12 +56,26 @@ export function bytesToBase64(bytes: Buffer) {
   return bytes.toString("base64");
 }
 
+function parseJsonResponse(text: string) {
+  try { return JSON.parse(text); } catch { return null; }
+}
+
+function veridexaError(action: string, response: Response, body: any) {
+  const reason = body?.error?.reason || body?.error?.message || body?.message || response.statusText || "Unknown provider error";
+  const requestId = body?.requestId ? ` [requestId: ${body.requestId}]` : "";
+  return new Error(`Veridexa ${action} failed (${response.status}): ${reason}${requestId}`.slice(0, 1000));
+}
+
 export async function enrollFace(bytes: Buffer, mimeType = "image/jpeg") {
   if (!veridexaConfigured()) return { configured: false as const };
+  if (!bytes.length) throw new Error("The camera produced an empty image. Please retake the photo.");
+  if (!["image/jpeg", "image/png", "image/webp"].includes(mimeType)) {
+    throw new Error("The camera image format is not supported. Please use the camera capture again.");
+  }
 
   const response = await fetch(`${BASE}/api/v1/biometrics/enroll`, {
     method: "POST",
-    headers: { ...authHeaders(), "Content-Type": "application/json" },
+    headers: { ...authHeaders(), "Content-Type": "application/json", Accept: "application/json" },
     body: JSON.stringify({
       schemaVersion: "biometric-core.api/v1",
       modality: "face",
@@ -70,35 +84,41 @@ export async function enrollFace(bytes: Buffer, mimeType = "image/jpeg") {
     cache: "no-store",
   });
 
-  const body = await response.json().catch(() => null);
-  if (!response.ok || !body?.ok) {
-    throw new Error(body?.error?.reason || `Veridexa face enrollment failed (${response.status})`);
+  const text = await response.text().catch(() => "");
+  const body = parseJsonResponse(text);
+  if (!response.ok || !body?.ok || !body?.result?.template?.vector) {
+    throw veridexaError("face enrollment", response, body);
   }
-  return { configured: true as const, template: body.result?.template, quality: body.result?.quality, requestId: body.requestId };
+  return { configured: true as const, template: body.result.template, quality: body.result?.quality, requestId: body.requestId };
 }
 
 export async function compareFace(reference: any, bytes: Buffer) {
   if (!veridexaConfigured()) return { configured: false as const };
 
+  let normalizedReference = reference;
+  if (typeof normalizedReference === "string") {
+    try { normalizedReference = JSON.parse(normalizedReference); } catch { /* handled below */ }
+  }
+  if (!normalizedReference?.vector || normalizedReference?.modality !== "face") {
+    throw new Error("The stored face template is invalid. Please complete first-time face verification again.");
+  }
+
   const response = await fetch(`${BASE}/api/v1/biometrics/compare`, {
     method: "POST",
-    headers: { ...authHeaders(), "Content-Type": "application/json" },
+    headers: { ...authHeaders(), "Content-Type": "application/json", Accept: "application/json" },
     body: JSON.stringify({
       schemaVersion: "biometric-core.api/v1",
       modality: "face",
-      reference,
-      probe: {
-        modality: "face",
-        version: 1,
-        vector: bytesToBase64(bytes),
-      },
+      reference: normalizedReference,
+      probe: { modality: "face", version: 1, vector: bytesToBase64(bytes) },
     }),
     cache: "no-store",
   });
 
-  const body = await response.json().catch(() => null);
-  if (!response.ok || !body?.ok) {
-    throw new Error(body?.error?.reason || `Veridexa face comparison failed (${response.status})`);
+  const text = await response.text().catch(() => "");
+  const body = parseJsonResponse(text);
+  if (!response.ok || !body?.ok || !body?.result) {
+    throw veridexaError("face comparison", response, body);
   }
   return { configured: true as const, result: body.result, requestId: body.requestId };
 }

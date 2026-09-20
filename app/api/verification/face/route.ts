@@ -22,7 +22,11 @@ export async function POST(req: Request) {
     }
 
     const rider = await db.riderProfile.findUnique({ where: { userId: user.id } });
-    if (!rider?.veridexaFaceTemplate || rider.verificationStatus !== "VERIFIED") {
+    const riderIdDocument = await db.riderVerificationDocument.findFirst({
+      where: { riderId: user.id, type: "ID", status: "APPROVED" },
+      orderBy: { createdAt: "desc" },
+    });
+    if (!riderIdDocument || rider.verificationStatus !== "VERIFIED") {
       return NextResponse.json({ error: "Complete your first-time rider verification before requesting a ride." }, { status: 403 });
     }
 

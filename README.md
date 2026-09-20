@@ -216,3 +216,8 @@ Face verification uses the browser MediaDevices API. The app sends a `Permission
 For desktop and mobile production deployments, serve ReaGae over **HTTPS**. `http://localhost` is treated as a secure context by modern browsers for local development, but an ordinary `http://192.168.x.x:3000` address on a phone is not. If a user has previously blocked camera access, the browser will not allow JavaScript to override that decision; the verification screen therefore provides browser/device-specific steps and a retry action.
 
 The server security header is intentionally configured as `camera=(self), microphone=(self), geolocation=(self)` rather than `camera=()`, which would block `getUserMedia()` before the browser could request permission.
+
+
+## Face verification
+
+ReaGae uses self-hosted **CompreFace** for 1:1 face verification. See `COMPREFACE-SETUP.md` for Docker and API-key setup. The browser camera never calls CompreFace directly; the ReaGae server sends the live selfie and identity-document image to CompreFace.

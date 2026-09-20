@@ -1,12 +1,36 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { hashToken } from "@/lib/security";
-import { compareFace, enrollFace, veridexaConfigured } from "@/lib/veridexa";
+import { comprefaceConfigured, verifyFaces } from "@/lib/compreface";
 
 function dataUrlToBuffer(value: string) {
   const match = value.match(/^data:(image\/(?:jpeg|jpg|png|webp));base64,(.+)$/);
   if (!match) throw new Error("A valid camera image is required.");
-  return { mimeType: match[1] === "image/jpg" ? "image/jpeg" : match[1], bytes: Buffer.from(match[2], "base64") };
+  const mimeType = match[1] === "image/jpg" ? "image/jpeg" : match[1];
+  const bytes = Buffer.from(match[2], "base64");
+  if (!bytes.length) throw new Error("The camera produced an empty image. Please retake it.");
+  return { mimeType, bytes };
+}
+
+function documentToBuffer(data: string, mimeType: string) {
+  const match = String(data || "").match(/^data:([^;]+);base64,(.+)$/);
+  if (!match) throw new Error("The stored identity document is invalid. Please upload it again.");
+  const actualMime = match[1] || mimeType;
+  if (!["image/jpeg", "image/jpg", "image/png", "image/webp"].includes(actualMime)) {
+    throw new Error("For face verification, the identity document must be uploaded as JPG, PNG or WebP. PDF documents can still be submitted for manual review, but a face image is required for automatic matching.");
+  }
+  return { mimeType: actualMime === "image/jpg" ? "image/jpeg" : actualMime, bytes: Buffer.from(match[2], "base64") };
+}
+
+function providerStatus(message: string) {
+  const match = message.match(/CompreFace .* failed \((\d{3})\)/);
+  if (!match) return 500;
+  const code = Number(match[1]);
+  if (code === 400 || code === 422) return 422;
+  if (code === 401 || code === 403) return 503;
+  if (code === 429) return 429;
+  if (code >= 500) return 502;
+  return 502;
 }
 
 export async function POST(req: Request) {
@@ -16,43 +40,38 @@ export async function POST(req: Request) {
     const selfie = String(body.selfie || "");
     if (!token || !selfie) return NextResponse.json({ error: "Live face capture is required." }, { status: 400 });
 
-    const { mimeType, bytes } = dataUrlToBuffer(selfie);
-    if (bytes.length > 4_000_000) return NextResponse.json({ error: "Capture is too large. Please retake it." }, { status: 413 });
-    if (!veridexaConfigured()) return NextResponse.json({ error: "Identity verification is temporarily unavailable. Please try again later." }, { status: 503 });
+    const live = dataUrlToBuffer(selfie);
+    if (live.bytes.length > 4_000_000) return NextResponse.json({ error: "Capture is too large. Please retake it." }, { status: 413 });
+    if (!comprefaceConfigured()) return NextResponse.json({ error: "Face verification is not configured. Set COMPREFACE_VERIFICATION_API_KEY on the server." }, { status: 503 });
 
     const rideVerification = await db.riderRideVerification.findUnique({ where: { tokenHash: hashToken(token) } });
     if (rideVerification && rideVerification.status === "IN_PROGRESS") {
-      const rider = await db.riderProfile.findUnique({ where: { userId: rideVerification.riderId } });
-      if (!rider?.veridexaFaceTemplate) return NextResponse.json({ error: "Your first-time face verification is not complete." }, { status: 409 });
-
-      const probe = await enrollFace(bytes, mimeType);
-      if (!probe.configured) return NextResponse.json({ error: "Verification service is unavailable." }, { status: 503 });
-      const comparison = await compareFace(rider.veridexaFaceTemplate, Buffer.from(probe.template.vector, "base64"));
-      const passed = comparison.configured && comparison.result?.passed === true;
+      const riderDoc = await db.riderVerificationDocument.findFirst({ where: { riderId: rideVerification.riderId, type: "ID" }, orderBy: { createdAt: "desc" } });
+      if (!riderDoc) return NextResponse.json({ error: "Your verified ID image is missing. Please complete your rider identity verification again." }, { status: 409 });
+      const reference = documentToBuffer(riderDoc.data, riderDoc.mimeType);
+      const comparison = await verifyFaces(live, reference);
+      if (!comparison.configured) return NextResponse.json({ error: "Face verification service is unavailable." }, { status: 503 });
+      const passed = comparison.passed;
       await db.riderRideVerification.update({
         where: { id: rideVerification.id },
         data: {
           status: passed ? "VERIFIED" : "REJECTED",
           livenessResult: "NOT_ASSESSED",
           faceMatchResult: passed ? "PASSED" : "FAILED",
-          score: Number(comparison.result?.score ?? 0),
+          score: comparison.similarity,
           capturedAt: new Date(),
           tokenHash: null,
-          metadata: JSON.stringify({ requestId: comparison.requestId, threshold: comparison.result?.threshold, purpose: "RIDE_REQUEST_IDENTITY" }),
+          metadata: JSON.stringify({ provider: "CompreFace", similarity: comparison.similarity, threshold: comparison.threshold, sourceProbability: comparison.sourceProbability, targetProbability: comparison.targetProbability, purpose: "RIDE_REQUEST_IDENTITY" }),
         },
       });
       return NextResponse.json({
-        message: passed ? "Identity confirmed for this ride request." : "We could not match the live face to your verified rider profile. Please try again.",
-        rideVerification: { status: passed ? "VERIFIED" : "REJECTED", score: comparison.result?.score ?? null },
+        message: passed ? "Identity confirmed for this ride request." : "The live face did not match the verified ID photo. Please retake the capture with your face clearly visible.",
+        rideVerification: { status: passed ? "VERIFIED" : "REJECTED", score: comparison.similarity },
       });
     }
 
     const verification = await db.verificationCase.findFirst({
-      where: {
-        type: { in: ["DRIVER_FACE", "RIDER_IDENTITY"] },
-        reference: hashToken(token),
-        status: "IN_PROGRESS",
-      },
+      where: { type: { in: ["DRIVER_FACE", "RIDER_IDENTITY"] }, reference: hashToken(token), status: "IN_PROGRESS" },
     });
     if (!verification || !verification.expiresAt || verification.expiresAt <= new Date()) {
       return NextResponse.json({ error: "This verification link has expired. Start a new verification." }, { status: 400 });
@@ -60,50 +79,61 @@ export async function POST(req: Request) {
 
     const driverDoc = await db.driverDocument.findFirst({ where: { driverId: verification.userId, type: "ID" }, orderBy: { createdAt: "desc" } });
     const riderDoc = await db.riderVerificationDocument.findFirst({ where: { riderId: verification.userId, type: "ID" }, orderBy: { createdAt: "desc" } });
-    if (!driverDoc && !riderDoc) return NextResponse.json({ error: "Upload your identity document before the live face check." }, { status: 400 });
+    const identityDoc = driverDoc || riderDoc;
+    if (!identityDoc) return NextResponse.json({ error: "Upload your identity document before the live face check." }, { status: 400 });
 
-    const enrollment = await enrollFace(bytes, mimeType);
-    if (!enrollment.configured || !enrollment.template) return NextResponse.json({ error: "Face verification service is unavailable." }, { status: 503 });
+    const reference = documentToBuffer(identityDoc.data, identityDoc.mimeType);
+    const comparison = await verifyFaces(live, reference);
+    if (!comparison.configured) return NextResponse.json({ error: "Face verification service is unavailable." }, { status: 503 });
 
     const owner = await db.user.findUnique({ where: { id: verification.userId } });
+    const passed = comparison.passed;
     if (owner?.role === "DRIVER") {
       await db.driverProfile.update({
         where: { userId: verification.userId },
         data: {
-          faceVerificationStatus: "PENDING_REVIEW",
-          // The four-step driver flow is not submitted until Step 4. Keep the
-          // overall case in progress so the UI can advance to the final
-          // submission step instead of jumping straight to agent review.
+          faceVerificationStatus: passed ? "PENDING_REVIEW" : "REJECTED",
           verificationStatus: "IN_PROGRESS",
-          faceLivenessResult: "PENDING_REVIEW",
-          faceMatchResult: "PENDING_REVIEW",
+          faceLivenessResult: "NOT_ASSESSED",
+          faceMatchResult: passed ? "PASSED" : "FAILED",
+          veridexaFaceTemplate: null,
         },
       });
     } else if (owner?.role === "RIDER") {
       await db.riderProfile.update({
         where: { userId: verification.userId },
         data: {
-          faceVerificationStatus: "PENDING_REVIEW",
-          verificationStatus: "PENDING_REVIEW",
-          faceLivenessResult: "PENDING_REVIEW",
-          faceMatchResult: "PENDING_REVIEW",
-          veridexaFaceTemplate: JSON.stringify(enrollment.template),
+          faceVerificationStatus: passed ? "PENDING_REVIEW" : "REJECTED",
+          verificationStatus: passed ? "PENDING_REVIEW" : "REJECTED",
+          faceLivenessResult: "NOT_ASSESSED",
+          faceMatchResult: passed ? "PASSED" : "FAILED",
+          veridexaFaceTemplate: null,
         },
       });
     }
 
     await db.verificationCase.update({
       where: { id: verification.id },
-      data: { status: "PENDING_REVIEW", reference: JSON.stringify({ veridexaRequestId: enrollment.requestId, quality: enrollment.quality }) },
+      data: {
+        status: passed ? "PENDING_REVIEW" : "IN_PROGRESS",
+        reference: JSON.stringify({ provider: "CompreFace", similarity: comparison.similarity, threshold: comparison.threshold, sourceProbability: comparison.sourceProbability, targetProbability: comparison.targetProbability }),
+      },
     });
 
+    if (!passed) {
+      return NextResponse.json({ error: `Face did not match the identity document (similarity ${comparison.similarity.toFixed(3)}; required ${comparison.threshold.toFixed(3)}). Please retake the photo.` }, { status: 422 });
+    }
+
     return NextResponse.json({
-      message: "Live capture received. Your first-time verification is now ready for review.",
-      liveness: "PENDING_REVIEW",
-      faceMatch: "PENDING_REVIEW",
+      message: "Face matched the identity document successfully. Continue to the next verification step.",
+      liveness: "NOT_ASSESSED",
+      faceMatch: "PASSED",
+      similarity: comparison.similarity,
+      threshold: comparison.threshold,
     });
   } catch (error) {
     console.error("face verification", error);
-    return NextResponse.json({ error: error instanceof Error ? error.message : "Verification failed. Please try again." }, { status: 500 });
+    const message = error instanceof Error ? error.message : "Verification failed. Please try again.";
+    return NextResponse.json({ error: message }, { status: providerStatus(message) });
   }
 }

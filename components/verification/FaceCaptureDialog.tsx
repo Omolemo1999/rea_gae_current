@@ -121,7 +121,7 @@ export default function FaceCaptureDialog({
     } finally {
       setCameraBusy(false);
     }
-  }, [checkPermission, stopCamera, token]);
+  }, [checkPermission, stopCamera]);
 
   useEffect(() => {
     if (!open) {
@@ -169,18 +169,37 @@ export default function FaceCaptureDialog({
     if (!videoRef.current || !token) return;
     setBusy(true);
     setError("");
+    if (videoRef.current.readyState < HTMLMediaElement.HAVE_CURRENT_DATA || !videoRef.current.videoWidth || !videoRef.current.videoHeight) {
+      setBusy(false);
+      setError("The camera is still starting. Please wait until your face is visible, then try again.");
+      return;
+    }
     const canvas = document.createElement("canvas");
-    canvas.width = videoRef.current.videoWidth || 720;
-    canvas.height = videoRef.current.videoHeight || 720;
-    canvas.getContext("2d")?.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+    canvas.width = videoRef.current.videoWidth;
+    canvas.height = videoRef.current.videoHeight;
+    const context = canvas.getContext("2d");
+    if (!context) {
+      setBusy(false);
+      setError("Your browser could not prepare the camera image. Please try again.");
+      return;
+    }
+    // Do not mirror the submitted biometric sample. The preview can be mirrored,
+    // but the provider should receive the natural camera orientation.
+    context.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+    const selfie = canvas.toDataURL("image/jpeg", 0.92);
+    if (!selfie || selfie.length < 1000) {
+      setBusy(false);
+      setError("The camera did not produce a usable image. Please retake the capture.");
+      return;
+    }
     try {
       const r = await fetch("/api/verification/face/complete", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, selfie: canvas.toDataURL("image/jpeg", 0.84) }),
+        body: JSON.stringify({ token, selfie }),
       });
-      const d = await r.json();
-      if (!r.ok) throw new Error(d.error || "Face verification failed.");
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(d.error || `Face verification failed (HTTP ${r.status}).`);
       stopCamera();
       onComplete(d);
     } catch (e) {
