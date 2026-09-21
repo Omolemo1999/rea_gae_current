@@ -14,10 +14,10 @@ function dataUrlToBuffer(value: string) {
 
 function documentToBuffer(data: string, mimeType: string) {
   const match = String(data || "").match(/^data:([^;]+);base64,(.+)$/);
-  if (!match) throw new Error("The stored identity document is invalid. Please upload it again.");
+  if (!match) throw new Error("The stored identity ID image is invalid. Please recapture the front of your ID with the camera.");
   const actualMime = match[1] || mimeType;
   if (!["image/jpeg", "image/jpg", "image/png", "image/webp"].includes(actualMime)) {
-    throw new Error("For face verification, the identity document must be uploaded as JPG, PNG or WebP. PDF documents can still be submitted for manual review, but a face image is required for automatic matching.");
+    throw new Error("The identity document must be a camera-captured JPG, PNG or WebP image. Please recapture the front of the ID.");
   }
   return { mimeType: actualMime === "image/jpg" ? "image/jpeg" : actualMime, bytes: Buffer.from(match[2], "base64") };
 }
@@ -80,7 +80,8 @@ export async function POST(req: Request) {
     const driverDoc = await db.driverDocument.findFirst({ where: { driverId: verification.userId, type: "ID" }, orderBy: { createdAt: "desc" } });
     const riderDoc = await db.riderVerificationDocument.findFirst({ where: { riderId: verification.userId, type: "ID" }, orderBy: { createdAt: "desc" } });
     const identityDoc = driverDoc || riderDoc;
-    if (!identityDoc) return NextResponse.json({ error: "Upload your identity document before the live face check." }, { status: 400 });
+    if (!identityDoc) return NextResponse.json({ error: "Capture the front of your ID with the camera before the live face check." }, { status: 400 });
+    if (identityDoc.mimeType === "application/pdf") return NextResponse.json({ error: "PDF identity documents are no longer accepted for biometric matching. Recapture the front of your ID with the camera." }, { status: 422 });
 
     const reference = documentToBuffer(identityDoc.data, identityDoc.mimeType);
     const comparison = await verifyFaces(live, reference);

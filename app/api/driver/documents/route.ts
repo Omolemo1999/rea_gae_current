@@ -26,8 +26,12 @@ export async function POST(req: Request) {
     const b = await req.json();
     if (!allowed.includes(b.type) || !b.fileName || !b.mimeType || !b.data) return NextResponse.json({ error: "Choose a supported document and file." }, { status: 400 });
     const { mimeType, bytes } = decodeDataUrl(String(b.data));
-    if (!["application/pdf", "image/jpeg", "image/jpg", "image/png", "image/webp"].includes(mimeType)) return NextResponse.json({ error: "Upload a PDF, JPG, PNG or WebP document." }, { status: 400 });
-    if (bytes.length > 5 * 1024 * 1024) return NextResponse.json({ error: "Document is too large. Maximum 5 MB." }, { status: 413 });
+    if (b.type === "ID") {
+      if (!["image/jpeg", "image/jpg", "image/png", "image/webp"].includes(mimeType)) return NextResponse.json({ error: "Driver ID must be captured with the camera as an image. PDF ID uploads are not supported." }, { status: 400 });
+    } else if (!["application/pdf", "image/jpeg", "image/jpg", "image/png", "image/webp"].includes(mimeType)) {
+      return NextResponse.json({ error: "Upload a PDF, JPG, PNG or WebP document." }, { status: 400 });
+    }
+    if (bytes.length > 5 * 1024 * 1024) return NextResponse.json({ error: b.type === "ID" ? "Captured ID image is too large. Maximum 5 MB." : "Document is too large. Maximum 5 MB." }, { status: 413 });
 
     let reviewNotes = "Queued for agent review.";
     {

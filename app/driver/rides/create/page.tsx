@@ -24,6 +24,7 @@ import AuthGuard from "@/components/AuthGuard";
 import DashboardShell from "@/components/dashboard/DashboardShell";
 import LiveMap from "@/components/maps/LiveMap";
 import FaceCaptureDialog from "@/components/verification/FaceCaptureDialog";
+import IdentityDocumentCapture from "@/components/verification/IdentityDocumentCapture";
 import { calculateDistanceKm, calculateRidePrice } from "@/lib/pricing";
 import ExperienceBanner from "@/components/experience/ExperienceBanner";
 
@@ -294,6 +295,19 @@ function UploadStep({
       )}
     </Paper>
   );
+}
+
+function DriverIdCaptureStep({ current, onDone }: { current?: any; onDone: () => void }) {
+  const [open, setOpen] = useState(false);
+  return <>
+    <Paper elevation={0} sx={{ p: 1.8, borderRadius: 0, border: "1px solid", borderColor: "divider", bgcolor: "rgba(49,92,214,.025)" }}>
+      <Stack direction={{ xs: "column", sm: "row" }} justifyContent="space-between" gap={1.5} alignItems={{ sm: "center" }}>
+        <Box sx={{ minWidth: 0 }}><Typography fontWeight={800}>South African ID / identity document</Typography><Typography variant="caption" color="text.secondary">{current ? `Captured image: ${current.fileName}` : "Capture the front of the physical ID with your camera. PDF uploads are not accepted."}</Typography>{current?.status && <Typography variant="caption" color={current.status === "APPROVED" ? "success.main" : "text.secondary"} sx={{ display: "block" }}>Status: {current.status.replaceAll("_", " ")}</Typography>}</Box>
+        <Button variant="outlined" startIcon={<CameraAltRoundedIcon />} onClick={() => setOpen(true)}>{current ? "Retake ID" : "Capture ID"}</Button>
+      </Stack>
+    </Paper>
+    <IdentityDocumentCapture open={open} onClose={() => setOpen(false)} submitUrl="/api/driver/documents" type="ID" onCaptured={(result) => { setOpen(false); onDone(); }} />
+  </>;
 }
 
 function VerificationGate() {
@@ -666,7 +680,7 @@ function VerificationGate() {
 
         <Typography color="text.secondary" sx={{ mt: 1 }}>
           {step === 1
-            ? "Upload both identity documents and enter your licence details."
+            ? "Capture your ID with the camera, upload your driver licence, and enter your licence details."
             : step === 2
               ? "Your vehicle information and vehicle documents are checked together."
               : step === 3
@@ -688,12 +702,7 @@ function VerificationGate() {
 
         {step === 1 && (
           <Stack gap={2.2} sx={{ mt: 3 }}>
-            <UploadStep
-              type="ID"
-              label="identity document"
-              current={docsMap.ID}
-              onDone={() => void load({ updateStep: false })}
-            />
+            <DriverIdCaptureStep current={docsMap.ID} onDone={() => void load({ updateStep: false })} />
             <UploadStep
               type="DRIVERS_LICENCE"
               label="driver's licence"

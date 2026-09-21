@@ -5,7 +5,7 @@ import { verifyDocumentWithVeridexa } from "@/lib/veridexa";
 
 function decodeDataUrl(data: string) {
   const match = data.match(/^data:([^;]+);base64,(.+)$/);
-  if (!match) throw new Error("Upload a valid ID image or PDF.");
+  if (!match) throw new Error("Capture a valid ID image with the camera.");
   return { mimeType: match[1], bytes: Buffer.from(match[2], "base64") };
 }
 
@@ -29,10 +29,10 @@ export async function POST(req: Request) {
     const data = String(b.data || "");
     const { mimeType, bytes } = decodeDataUrl(data);
 
-    if (!["application/pdf", "image/jpeg", "image/jpg", "image/png", "image/webp"].includes(mimeType)) {
-      return NextResponse.json({ error: "Upload a PDF, JPG, PNG or WebP identity document." }, { status: 400 });
+    if (!["image/jpeg", "image/jpg", "image/png", "image/webp"].includes(mimeType)) {
+      return NextResponse.json({ error: "Your ID must be captured with the camera as a JPG, PNG or WebP image. PDF identity uploads are not supported." }, { status: 400 });
     }
-    if (bytes.length > 5 * 1024 * 1024) return NextResponse.json({ error: "ID file is too large. Maximum 5 MB." }, { status: 413 });
+    if (bytes.length > 5 * 1024 * 1024) return NextResponse.json({ error: "Captured ID image is too large. Maximum 5 MB." }, { status: 413 });
 
     const existing = await db.riderVerificationDocument.findFirst({ where: { riderId: u.id, type: "ID" }, orderBy: { createdAt: "desc" } });
     if (existing?.status === "APPROVED") return NextResponse.json({ error: "Your ID is already approved." }, { status: 409 });
@@ -70,7 +70,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
       document: { id: doc.id, fileName: doc.fileName, status: doc.status, reviewNotes },
-      message: `${doc.fileName} uploaded successfully. Complete the live face check next.`,
+      message: "ID captured successfully. Complete the live face check next; CompreFace will compare your live face with the face visible on this captured ID.",
     });
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "Could not upload your ID." }, { status: 500 });
